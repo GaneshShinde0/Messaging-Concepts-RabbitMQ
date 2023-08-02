@@ -1,0 +1,86 @@
+package rabbitmq.demos.request_reply.response_queue_name;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeoutException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Consumer;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
+
+import rabbitmq.demos.request_reply.response_matching.CalculationRequest;
+import rabbitmq.demos.request_reply.response_matching.CalculationResponse;
+import rabbitmq.demos.request_reply.response_matching.Constants;
+import rabbitmq.demos.request_reply.response_matching.OperationType;
+
+public class Requestor {
+
+	public static void main(String[] args) throws IOException, TimeoutException, InterruptedException {
+final ConcurrentHashMap<String, CalculationRequest> waitingRequests = new ConcurrentHashMap<String, CalculationRequest>();
+		
+		ConnectionFactory factory = new ConnectionFactory();
+		factory.setHost("localhost");
+		factory.setVirtualHost("/");
+		factory.setPort(5672);
+        factory.setUsername("guest");
+        factory.setPassword("guest");		
+        
+        Connection conn = factory.newConnection();
+        Channel channel = conn.createChannel();
+        
+        String responseQueueName = "res." + UUID.randomUUID().toString();
+        channel.QueueDeclare(responseQueueName);
+        
+        Consumer consumer = new DefaultConsumer(channel) {
+	         @Override
+	         public void handleDelivery(String consumerTag,
+	                                    Envelope envelope,
+	                                    AMQP.BasicProperties properties,
+	                                    byte[] body)
+	             throws IOException
+	         {	        	 
+	        	 String requestId = new String((byte[])properties.getHeaders().get(Constants.RequestIdHeaderKey));
+
+                 if (waitingRequests.containsKey(requestId))
+                 {
+                	 CalculationRequest request = waitingRequests.get(requestId);
+                     String messageData = new String(body);
+                     
+                     ObjectMapper mapper = new ObjectMapper();
+                     CalculationResponse response = mapper.readValue(messageData, CalculationResponse.class);                      
+
+                     System.out.println("Calculation result: " + request.toString() +"="+ response.toString());
+                 }	             
+	         }
+	     };       
+
+       channel.basicConsume(responseQueueName, true, consumer);
+       
+       System.out.println("Press enter to send requests");
+       Scanner reader = new Scanner(System.in);
+       reader.nextLine();
+
+       sendRequest(waitingRequests, channel, new CalculationRequest(2, 4, OperationType.Add));
+       sendRequest(waitingRequests, channel, new CalculationRequest(8, 6, OperationType.Subtract));
+       sendRequest(waitingRequests, channel, new CalculationRequest(20, 7, OperationType.Add));            
+       sendRequest(waitingRequests, channel, new CalculationRequest(50, 8, OperationType.Subtract));
+
+       System.out.println("Press enter to exit");
+       reader.nextLine();
+
+       channel.close();
+       conn.close();
+
+	}
+
+}

@@ -1,0 +1,10 @@
+package rabbitmq.demos.pubsub;
+
+public class PubSubPublisher {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

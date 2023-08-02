@@ -1,0 +1,48 @@
+package rabbitmq.demos.pubsub;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.concurrent.TimeoutException;
+
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+public class PubSubConsumer {
+
+	public static void main(String[] args) {
+		Scanner reader = new Scanner(System.in);
+		 
+		System.out.print("Enter the queue name:");
+        String queueName = reader.nextLine();
+
+        ConnectionFactory factory = new ConnectionFactory();
+		factory.setHost("localhost");
+		factory.setVirtualHost("/");
+		factory.setPort(5672);
+        factory.setUsername("guest");
+        factory.setPassword("guest");		
+        
+        Connection conn = factory.newConnection();
+        Channel channel = conn.createChannel();
+
+        var consumer = new EventingBasicConsumer(channel);
+        consumer.Received += (sender, e) =>
+          {
+              string message = System.Text.Encoding.UTF8.GetString(e.Body.ToArray());
+              Console.WriteLine("Subscriber [" + queueName + "] Message: " + message);
+          };
+
+        String consumerTag = channel.BasicConsume(queueName, true, consumer);
+
+        System.out.print("Subscribed to the queue '"+queueName+"'. Press enter to exit.");
+        reader.nextLine();
+
+        channel.close();
+        conn.close();    
+	}
+}

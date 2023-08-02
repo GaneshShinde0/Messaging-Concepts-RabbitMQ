@@ -1,0 +1,13 @@
+package rabbitmq.demos.request_reply.response_queue_name;
+
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
+public class Requestor {
+
+	public static void main(String[] args) throws IOException, TimeoutException, InterruptedException {
+		// TODO Auto-generated method stub
+
+	}
+
+}

@@ -1,0 +1,10 @@
+package rabbitmq.demos.request_reply.response_matching;
+
+public class Requestor {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

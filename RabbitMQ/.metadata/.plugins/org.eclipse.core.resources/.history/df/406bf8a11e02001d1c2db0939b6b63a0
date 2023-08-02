@@ -1,0 +1,52 @@
+package rabbitmq.demos.direct;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
+
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+public class DirectDemo {
+
+	public static void main(String[] args) throws IOException, TimeoutException, InterruptedException {
+		ConnectionFactory factory = new ConnectionFactory();
+		factory.setHost("localhost");
+		factory.setVirtualHost("/");
+		factory.setPort(5672);
+        factory.setUsername("guest");
+        factory.setPassword("guest");		
+        
+        Connection conn = factory.newConnection();
+        Channel channel = conn.createChannel();
+        
+        //Enable channel level publisher confirms (to be able to get confirmations from RabbitMQ broker)
+        channel.confirmSelect();
+        
+        channel.exchangeDeclare(
+                "ex.fanout",
+                BuiltinExchangeType.DIRECT,
+                true,
+                false,
+                null);
+
+            channel.queueDeclare(
+                "my.queue1",
+                true,
+                false,
+                false,
+                null);
+
+            channel.queueDeclare(
+                "my.queue2",
+                true,
+                false,
+                false,
+                null);
+
+	}
+
+}
