@@ -1,5 +1,0 @@
-package rabbitmq.demos.request_reply;
-
-public class Replier {
-
-}

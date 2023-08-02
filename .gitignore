@@ -2,4 +2,4 @@
 
 # dependencies
 RabbitMQ/*/target/*
-*/.metadata/*
+RabbitMQ/.metadata/*
